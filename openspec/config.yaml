@@ -1,0 +1,49 @@
+schema: spec-driven
+
+context: |
+  ## Stack
+  - Python 3.12, Rich >=13.0, pygame >=2.5, librosa >=0.10
+  - pyfiglet >=0.8, numpy >=1.24
+  - unittest (stdlib) para tests
+  - Deploy: aplicación de terminal local (no web, no server)
+
+  ## Arquitectura
+  - Juego monolítico single-loop con separación modular
+  - main.py: motor del juego (state machine, render, input, game loop 60 FPS)
+  - analyze.py: CLI offline para generar charts desde MP3 con librosa
+  - scoring.py: funciones puras de cálculo de score (sin imports, sin estado)
+  - scores.py: persistencia de scores en JSON
+  - config.py: persistencia de configuración de usuario (keybindings)
+  - theme.py: constantes de color y estilos (única fuente de verdad para colores)
+  - sfx.py: wrapper de efectos de sonido sobre pygame mixer
+
+  ## Convenciones
+  - Colores SIEMPRE en theme.py, nunca hardcodeados
+  - Archivos de código máximo 150 líneas
+  - Funciones pequeñas y enfocadas (SOLID)
+  - Animaciones con easing (sin interpolación lineal cruda)
+  - Input platform-specific: msvcrt (Windows), curses (Unix)
+
+  ## Decisiones de diseño
+  - Hit windows: PERFECT ±35ms, GOOD ±85ms, OK ±135ms, MISS >±135ms
+  - Score cap: 1,000,000 puntos
+  - Game loop: MENU → SONG_SELECT → PLAYING → PAUSED → COUNTDOWN → RESULTS
+  - Charts generados offline en 3 dificultades: easy, hard, crazy
+
+rules:
+  proposal:
+    - "Incluir sección 'Impacto visual' si el cambio afecta la UI del terminal"
+    - "Identificar módulos afectados y sus responsabilidades"
+    - "Verificar que no se introducen dependencias nuevas sin justificación"
+  specs:
+    - "Usar palabras clave RFC 2119: MUST, SHOULD, MAY"
+    - "Todo requisito MUST tener al menos un escenario con #### Scenario"
+    - "Escenarios en formato Given/When/Then"
+  design:
+    - "Respetar separación de responsabilidades entre módulos existentes"
+    - "Colores nuevos MUST definirse en theme.py con nombre semántico"
+    - "Validar que playfield math se mantiene consistente (ver CLAUDE.md)"
+  tasks:
+    - "Tareas atómicas, una responsabilidad por tarea"
+    - "Verificar que cambios no introducen archivos > 150 líneas"
+    - "Incluir tarea de test si el cambio afecta scoring o lógica de juego"

@@ -1,8 +1,68 @@
-# Claudia — Project Guidelines
+# CLAUDE.md
 
-Keep this file up to date, if you change something that makes some information here obsolte or outdated, or you find something outdated here, then update this file with the new information.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Do not hesitate to apply the boyscout rule
+Keep this file up to date, if you change something that makes some information here obsolete or outdated, or you find something outdated here, then update this file with the new information.
+
+Do not hesitate to apply the boyscout rule.
+
+## Development Commands
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the game
+python main.py
+
+# Generate charts for a new song
+python analyze.py "songs/your song.mp3"
+
+# Run tests
+python -m unittest test_scoring -v
+```
+
+## Tech Stack
+
+- **Python 3.10+** — Core language
+- **Rich** — Terminal UI rendering (gradients, animations, colors)
+- **pygame** — Audio playback and mixing
+- **librosa** — Beat detection and audio analysis for chart generation
+- **pyfiglet** — ASCII art title text
+- **numpy** — Numerical computations for audio analysis
+- **unittest** — Test framework (stdlib)
+
+## Architecture
+
+**Monolithic single-loop game** with clear module separation for non-UI concerns:
+
+- `main.py` — Game engine: state machine, rendering, input handling, main loop (60 FPS). Contains `GameState` class (gameplay logic), `State` enum (MENU → SONG_SELECT → PLAYING → PAUSED → COUNTDOWN → RESULTS → KEYBIND), and all Rich-based rendering functions.
+- `analyze.py` — Offline CLI tool: generates `.chart.json` files from MP3s using librosa. Three difficulty tiers (easy/hard/crazy) based on note density and lane assignment.
+- `scoring.py` — Pure functions for score calculation (no imports, no state). Accuracy, grades, combo bonus, final score (0–1M cap).
+- `scores.py` — Score persistence to `scores.json`. Per-song, per-difficulty best tracking.
+- `config.py` — User config persistence to `config.json`. Key bindings (default: D, F, J, K).
+- `theme.py` — All color constants and style data. See "Color & Theme Rules" below.
+- `sfx.py` — Sound effects wrapper around pygame mixer. Graceful degradation if unavailable.
+
+### Platform-specific input
+
+- **Windows:** `msvcrt` for non-blocking keys + `winmm` for high-res timing
+- **Unix:** `curses` for non-blocking keys
+
+### Hit Windows
+
+| Grade   | Window  | Score weight |
+|---------|---------|--------------|
+| PERFECT | ±35ms   | 1.0x         |
+| GOOD    | ±85ms   | 0.5x         |
+| OK      | ±135ms  | 0.1x         |
+| MISS    | >±135ms | 0x           |
+
+### Game Loop Flow
+
+`MENU → SONG_SELECT → PLAYING → (PAUSED via ESC) → COUNTDOWN → RESULTS → MENU`
+
+During PLAYING: 60 FPS polling loop → check input → update note timings → check misses → render playfield
 
 ## Visual Polish & Game Juice
 
