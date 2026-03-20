@@ -27,7 +27,7 @@ context: |
   - Code files maximum 150 lines
   - Small and focused functions (SOLID)
   - Animations with easing (no raw linear interpolation)
-  - Platform-specific input: msvcrt (Windows), curses (Unix)
+  - Platform-specific input: msvcrt (Windows), termios+tty+select (Unix)
   - Dependencies managed with uv (pyproject.toml + uv.lock)
 
   ## Design decisions

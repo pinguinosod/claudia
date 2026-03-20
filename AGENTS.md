@@ -51,7 +51,7 @@ uv.lock              — Locked dependency versions
 
 Monolithic single-loop game with modular separation:
 
-- **Platform input**: `msvcrt` (Windows), `curses` (Unix)
+- **Platform input**: `msvcrt` (Windows), `termios`+`tty`+`select` (Unix)
 - **Game loop**: MENU → SONG_SELECT → PLAYING → (PAUSED via ESC) → COUNTDOWN → RESULTS → MENU
 - **During PLAYING**: 60 FPS polling → check input → update note timings → check misses → render playfield
 

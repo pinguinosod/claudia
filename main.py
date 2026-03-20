@@ -26,8 +26,12 @@ try:
     import msvcrt
     _WINDOWS = True
 except ImportError:
-    import curses
+    import termios
+    import tty
+    import select
     _WINDOWS = False
+
+_original_terminal_attrs = None
 
 try:
     import pygame
@@ -1425,6 +1429,26 @@ class SongPreview:
 
 # --- Input ---
 
+class _raw_terminal:
+    """Context manager: puts Unix stdin in raw mode, restores on exit."""
+    def __enter__(self):
+        global _original_terminal_attrs
+        if not _WINDOWS:
+            try:
+                _original_terminal_attrs = termios.tcgetattr(sys.stdin)
+                tty.setraw(sys.stdin.fileno())
+            except Exception:
+                _original_terminal_attrs = None
+        return self
+
+    def __exit__(self, *_):
+        if not _WINDOWS and _original_terminal_attrs is not None:
+            try:
+                termios.tcsetattr(sys.stdin, termios.TCSADRAIN, _original_terminal_attrs)
+            except Exception:
+                pass
+
+
 def _get_key_windows():
     if not msvcrt.kbhit():
         return None
@@ -1458,25 +1482,31 @@ def _get_key_windows():
     return None
 
 
+def _read_unix_key():
+    """Read one key event from raw stdin. Returns (key_str, ) or None."""
+    if not select.select([sys.stdin], [], [], 0)[0]:
+        return None
+    ch = sys.stdin.read(1)
+    if ch == '\x1b':
+        # Check if more bytes follow (arrow key sequence)
+        if select.select([sys.stdin], [], [], 0)[0]:
+            seq = sys.stdin.read(2)
+            return {'[A': 'up', '[B': 'down', '[C': 'right', '[D': 'left'}.get(seq)
+        return 'esc'
+    if ch in ('\r', '\n'):
+        return 'enter'
+    if ch == '\t':
+        return 'tab'
+    return ch if ch else None
+
+
 def _get_key_unix():
     try:
-        ch = _curses_win.getch()
-        if ch == curses.KEY_UP:
-            return "up"
-        elif ch == curses.KEY_DOWN:
-            return "down"
-        elif ch == curses.KEY_LEFT:
-            return "left"
-        elif ch == curses.KEY_RIGHT:
-            return "right"
-        elif ch in (curses.KEY_ENTER, 10, 13):
-            return "enter"
-        elif ch == 27:
-            return "esc"
-        elif ch == 9:
-            return "tab"
-        elif ch != -1:
-            c = chr(ch).lower()
+        ch = _read_unix_key()
+        if ch in ('up', 'down', 'left', 'right', 'enter', 'esc', 'tab'):
+            return ch
+        if ch:
+            c = ch.lower()
             if c == 'w':
                 return 'w'
             if c == 's':
@@ -1519,16 +1549,11 @@ def _get_raw_key_windows():
 def _get_raw_key_unix():
     """Like _get_key_unix but returns any printable ASCII character."""
     try:
-        ch = _curses_win.getch()
-        if ch == curses.KEY_UP:              return "up"
-        if ch == curses.KEY_DOWN:            return "down"
-        if ch == curses.KEY_LEFT:            return "left"
-        if ch == curses.KEY_RIGHT:           return "right"
-        if ch in (curses.KEY_ENTER, 10, 13): return "enter"
-        if ch == 27:                         return "esc"
-        if ch == 9:                          return "tab"
-        if 33 <= ch <= 126:                  # printable non-space ASCII
-            return chr(ch).lower()
+        ch = _read_unix_key()
+        if ch in ('up', 'down', 'left', 'right', 'enter', 'esc', 'tab'):
+            return ch
+        if ch and ch.isprintable() and not ch.isspace():
+            return ch.lower()
     except Exception:
         pass
     return None
@@ -1544,8 +1569,12 @@ def get_raw_key():
 
 def _flush_input():
     """Drain all pending OS keyboard events."""
-    while get_key() is not None:
-        pass
+    if _WINDOWS:
+        while msvcrt.kbhit():
+            msvcrt.getch()
+    else:
+        while select.select([sys.stdin], [], [], 0)[0]:
+            sys.stdin.read(1)
 
 
 # --- Song select helpers ---
@@ -1930,19 +1959,8 @@ def run_game():
 
 def main():
     if not _WINDOWS:
-        global _curses_win
-        _curses_win = curses.initscr()
-        curses.noecho()
-        curses.cbreak()
-        _curses_win.keypad(True)
-        _curses_win.nodelay(True)
-        try:
+        with _raw_terminal():
             run_game()
-        finally:
-            curses.nocbreak()
-            _curses_win.keypad(False)
-            curses.echo()
-            curses.endwin()
     else:
         import ctypes
         _winmm = ctypes.windll.winmm
