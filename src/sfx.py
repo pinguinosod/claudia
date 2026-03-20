@@ -3,7 +3,7 @@ import os
 
 _sounds: dict = {}
 _enabled = False
-_AUDIO_DIR = os.path.join(os.path.dirname(__file__), "audio")
+_AUDIO_DIR = os.path.join(os.path.dirname(__file__), "..", "assets", "audio")
 
 _FILES = {
     "nav":       "beep_high_short.mp3",

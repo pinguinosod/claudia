@@ -11,7 +11,8 @@ import sys
 import os
 import numpy as np
 
-_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_SCRIPT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_ASSETS_DIR = os.path.join(_SCRIPT_DIR, "assets")
 
 # Sentinel meaning "no previous note exists yet"
 _BEFORE_SONG = -float("inf")
@@ -395,7 +396,7 @@ def analyze_all(paths: list) -> None:
 
 def pick_song():
     """Interactively list MP3s in songs/ and return the chosen path, or None for all."""
-    songs_dir = os.path.join(_SCRIPT_DIR, "songs")
+    songs_dir = os.path.join(_ASSETS_DIR, "songs")
     if not os.path.isdir(songs_dir):
         print(f"songs/ directory not found at {songs_dir}")
         sys.exit(1)
@@ -441,7 +442,7 @@ if __name__ == "__main__":
     else:
         choice = pick_song()
         if choice is None:
-            songs_dir = os.path.join(_SCRIPT_DIR, "songs")
+            songs_dir = os.path.join(_ASSETS_DIR, "songs")
             paths = sorted(
                 os.path.join(songs_dir, f)
                 for f in os.listdir(songs_dir)

@@ -10,21 +10,22 @@ Do not hesitate to apply the boyscout rule.
 
 ```bash
 # Install dependencies
-pip install -r requirements.txt
+uv sync
 
 # Run the game
-python main.py
+uv run main.py
 
 # Generate charts for a new song
-python analyze.py "songs/your song.mp3"
+uv run python src/analyze.py "assets/songs/your song.mp3"
 
 # Run tests
-python -m unittest test_scoring -v
+uv run python -m unittest src.test_scoring -v
 ```
 
 ## Tech Stack
 
-- **Python 3.10+** — Core language
+- **Python 3.12+** — Core language
+- **uv** — Package manager and virtual environment
 - **Rich** — Terminal UI rendering (gradients, animations, colors)
 - **pygame** — Audio playback and mixing
 - **librosa** — Beat detection and audio analysis for chart generation
@@ -36,13 +37,17 @@ python -m unittest test_scoring -v
 
 **Monolithic single-loop game** with clear module separation for non-UI concerns:
 
-- `main.py` — Game engine: state machine, rendering, input handling, main loop (60 FPS). Contains `GameState` class (gameplay logic), `State` enum (MENU → SONG_SELECT → PLAYING → PAUSED → COUNTDOWN → RESULTS → KEYBIND), and all Rich-based rendering functions.
-- `analyze.py` — Offline CLI tool: generates `.chart.json` files from MP3s using librosa. Three difficulty tiers (easy/hard/crazy) based on note density and lane assignment.
-- `scoring.py` — Pure functions for score calculation (no imports, no state). Accuracy, grades, combo bonus, final score (0–1M cap).
-- `scores.py` — Score persistence to `scores.json`. Per-song, per-difficulty best tracking.
-- `config.py` — User config persistence to `config.json`. Key bindings (default: D, F, J, K).
-- `theme.py` — All color constants and style data. See "Color & Theme Rules" below.
-- `sfx.py` — Sound effects wrapper around pygame mixer. Graceful degradation if unavailable.
+- `main.py` — Game entry point: state machine, rendering, input handling, main loop (60 FPS). Contains `GameState` class (gameplay logic), `State` enum (MENU → SONG_SELECT → PLAYING → PAUSED → COUNTDOWN → RESULTS → KEYBIND), and all Rich-based rendering functions.
+- `src/analyze.py` — Offline CLI tool: generates `.chart.json` files from MP3s using librosa. Three difficulty tiers (easy/hard/crazy) based on note density and lane assignment.
+- `src/scoring.py` — Pure functions for score calculation (no imports, no state). Accuracy, grades, combo bonus, final score (0–1M cap).
+- `src/scores.py` — Score persistence to `scores.json`. Per-song, per-difficulty best tracking.
+- `src/config.py` — User config persistence to `config.json`. Key bindings (default: D, F, J, K).
+- `src/theme.py` — All color constants and style data. See "Color & Theme Rules" below.
+- `src/sfx.py` — Sound effects wrapper around pygame mixer. Graceful degradation if unavailable.
+- `assets/songs/` — MP3 files and generated `.chart.json` files.
+- `assets/audio/` — SFX audio assets.
+- `assets/img/` — Image assets.
+- `docs/` — Documentation (README, LICENSE, CREDITS).
 
 ### Platform-specific input
 
@@ -78,7 +83,7 @@ This is a terminal game. Every implementation should treat the terminal as a cre
 
 ## Color & Theme Rules
 
-All colors live in `theme.py`. Never hardcode hex color strings in `main.py` or any other file.
+All colors live in `src/theme.py`. Never hardcode hex color strings in `main.py` or any other file.
 
 - **Adding a new color**: define it in `theme.py` with a semantic name, then reference it as `theme.MY_COLOR`.
 - **Reusing an existing color for a new purpose**: reference the existing `theme.*` constant — do not copy the hex value.

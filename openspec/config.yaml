@@ -2,27 +2,33 @@ schema: spec-driven
 
 context: |
   ## Stack
-  - Python 3.12, Rich >=13.0, pygame >=2.5, librosa >=0.10
+  - Python 3.12, uv (package manager)
+  - Rich >=13.0, pygame >=2.5, librosa >=0.10
   - pyfiglet >=0.8, numpy >=1.24
   - unittest (stdlib) para tests
   - Deploy: aplicación de terminal local (no web, no server)
 
   ## Arquitectura
   - Juego monolítico single-loop con separación modular
-  - main.py: motor del juego (state machine, render, input, game loop 60 FPS)
-  - analyze.py: CLI offline para generar charts desde MP3 con librosa
-  - scoring.py: funciones puras de cálculo de score (sin imports, sin estado)
-  - scores.py: persistencia de scores en JSON
-  - config.py: persistencia de configuración de usuario (keybindings)
-  - theme.py: constantes de color y estilos (única fuente de verdad para colores)
-  - sfx.py: wrapper de efectos de sonido sobre pygame mixer
+  - main.py (raíz): punto de entrada, motor del juego (state machine, render, input, game loop 60 FPS)
+  - src/analyze.py: CLI offline para generar charts desde MP3 con librosa
+  - src/scoring.py: funciones puras de cálculo de score (sin imports, sin estado)
+  - src/scores.py: persistencia de scores en JSON
+  - src/config.py: persistencia de configuración de usuario (keybindings)
+  - src/theme.py: constantes de color y estilos (única fuente de verdad para colores)
+  - src/sfx.py: wrapper de efectos de sonido sobre pygame mixer
+  - assets/songs/: MP3 y archivos .chart.json generados
+  - assets/audio/: efectos de sonido
+  - assets/img/: imágenes
+  - docs/: documentación (README, LICENSE, CREDITS)
 
   ## Convenciones
-  - Colores SIEMPRE en theme.py, nunca hardcodeados
+  - Colores SIEMPRE en src/theme.py, nunca hardcodeados
   - Archivos de código máximo 150 líneas
   - Funciones pequeñas y enfocadas (SOLID)
   - Animaciones con easing (sin interpolación lineal cruda)
   - Input platform-specific: msvcrt (Windows), curses (Unix)
+  - Dependencias gestionadas con uv (pyproject.toml + uv.lock)
 
   ## Decisiones de diseño
   - Hit windows: PERFECT ±35ms, GOOD ±85ms, OK ±135ms, MISS >±135ms
@@ -41,7 +47,7 @@ rules:
     - "Escenarios en formato Given/When/Then"
   design:
     - "Respetar separación de responsabilidades entre módulos existentes"
-    - "Colores nuevos MUST definirse en theme.py con nombre semántico"
+    - "Colores nuevos MUST definirse en src/theme.py con nombre semántico"
     - "Validar que playfield math se mantiene consistente (ver CLAUDE.md)"
   tasks:
     - "Tareas atómicas, una responsabilidad por tarea"
