@@ -44,6 +44,7 @@ uv run python -m unittest src.test_scoring -v
 - `src/config.py` — User config persistence to `config.json`. Key bindings (default: D, F, J, K).
 - `src/theme.py` — All color constants and style data. See "Color & Theme Rules" below.
 - `src/sfx.py` — Sound effects wrapper around pygame mixer. Graceful degradation if unavailable.
+- `src/layout.py` — Pure functions for terminal layout calculation. Returns `Layout` dataclass with dynamic playfield dimensions based on terminal size. Minimum terminal: 80×24.
 - `assets/songs/` — MP3 files and generated `.chart.json` files.
 - `assets/audio/` — SFX audio assets.
 - `assets/img/` — Image assets.
@@ -93,6 +94,8 @@ The one exception: inline lerp computations that produce a transient color value
 
 ## Playfield Math
 
+**All playfield dimensions are now dynamic**, calculated by `src/layout.py` based on terminal size. The `_update_layout()` function in `main.py` recalculates every frame.
+
 ### Row-mapping formula
 
 ```
@@ -100,35 +103,26 @@ row_f = HIT_ZONE_ROW * (1.0 - ahead_ms / window_ms)
 ```
 `window_ms = NOTE_FALL_WINDOW_S * 1000`. Notes enter at `row_f=0` (top) and cross the separator at `row_f=HIT_ZONE_ROW` (PERFECT line).
 
-### Marker rows (auto-computed — never hardcode)
+### Dynamic dimensions (from `layout.calc()`)
 
-```python
-_OK_MARKER_ROW   = int(HIT_ZONE_ROW * (1.0 - OK_MS   / (NOTE_FALL_WINDOW_S * 1000)))
-_GOOD_MARKER_ROW = int(HIT_ZONE_ROW * (1.0 - GOOD_MS  / (NOTE_FALL_WINDOW_S * 1000)))
-```
+- `hit_zone_row = max(16, terminal_rows - 8)`
+- `ghost_rows = ceil(hit_zone_row * MISS_LINGER_MS / NOTE_FALL_WINDOW_MS) + 1`
+- `playfield_rows = hit_zone_row + ghost_rows`
+- `ripple_duration = hit_zone_row / 44.0`
+- Marker rows auto-computed from hit_zone_row and timing constants
 
-These rows mark where a falling note crosses into GOOD and OK hit windows respectively. A note at `row_f = _GOOD_MARKER_ROW` has exactly `GOOD_MS` milliseconds until it reaches the hit zone. Do not hardcode the resulting row numbers — they shift whenever timing constants are rebalanced.
+### Ghost zone invariant (validated automatically)
 
-### Ghost zone sizing rule
+`hit_zone_row * (1 + MISS_LINGER_MS / window_ms) < playfield_rows`
 
-```
-PLAYFIELD_ROWS = HIT_ZONE_ROW + 3
-```
+This is asserted inside `layout.calc()` — if it fails, the program crashes with a clear message.
 
-Verify ghost expiry fits: `HIT_ZONE_ROW * (1 + MISS_LINGER_MS / window_ms) < PLAYFIELD_ROWS`
+### Minimum terminal size
 
-Recheck this inequality whenever `HIT_ZONE_ROW`, `MISS_LINGER_MS`, or `NOTE_FALL_WINDOW_S` change — if it fails, missed notes render outside the playfield.
+80 columns × 24 rows. Below this, the game shows a warning instead of rendering.
 
-### Ripple speed
+### Scaling checklist (when changing timing constants)
 
-In-field and side-rail ripples both use **0.5s** so they travel at the same apparent speed.
-Rule: `ripple_duration = HIT_ZONE_ROW / 44.0` seconds. Scale this whenever HIT_ZONE_ROW changes.
-
-### Scaling checklist (when changing HIT_ZONE_ROW)
-
-1. Update `HIT_ZONE_ROW`
-2. Update `PLAYFIELD_ROWS = HIT_ZONE_ROW + 3`
-3. Update `_PLAYFIELD_CONTENT_HEIGHT` (add the row delta to the old value)
-4. Scale ripple duration: `HIT_ZONE_ROW / 44.0` (both in-field and side-rail)
-5. Verify ghost expiry: `HIT_ZONE_ROW * (1 + MISS_LINGER_MS/2000) < PLAYFIELD_ROWS`
-6. `SIGMA_CORE` — no change needed; note separation improves naturally with more rows
+1. Update constants in `src/layout.py`
+2. Run tests: `cd src && uv run python -m unittest test_layout -v`
+3. Ghost expiry invariant is validated automatically by `layout.calc()`

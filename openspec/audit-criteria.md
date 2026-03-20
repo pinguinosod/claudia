@@ -1,33 +1,33 @@
-# Criterios de Auditoría — Clitar Hero
+# Audit Criteria — Clitar Hero
 
-## Estructura y organización
-- [ ] Ningún archivo supera 150 líneas de código
-- [ ] Funciones con menos de 30 líneas
-- [ ] Separación clara: motor (main.py), lógica pura (scoring.py), datos (theme.py), persistencia (scores.py, config.py)
-- [ ] Sin código duplicado entre módulos
+## Structure and organization
+- [ ] No file exceeds 150 lines of code
+- [ ] Functions under 30 lines
+- [ ] Clear separation: engine (main.py), pure logic (scoring.py), data (theme.py), persistence (scores.py, config.py)
+- [ ] No duplicated code between modules
 
-## Seguridad
-- [ ] Sin secretos hardcodeados
-- [ ] Inputs de usuario validados (keybindings, archivos de canciones)
-- [ ] Archivos JSON parseados con manejo de errores
+## Security
+- [ ] No hardcoded secrets
+- [ ] User inputs validated (keybindings, song files)
+- [ ] JSON files parsed with error handling
 
 ## Testing
-- [ ] scoring.py con tests unitarios completos
-- [ ] analyze.py con tests para generación de charts
-- [ ] Funciones puras cubiertas por tests
+- [ ] scoring.py with complete unit tests
+- [ ] analyze.py with tests for chart generation
+- [ ] Pure functions covered by tests
 
 ## Performance
-- [ ] Game loop mantiene 60 FPS sin drops
-- [ ] Sin cálculos pesados dentro del render loop
-- [ ] Lazy loading de assets de audio
+- [ ] Game loop maintains 60 FPS without drops
+- [ ] No heavy computations inside the render loop
+- [ ] Lazy loading of audio assets
 
-## Visual y UX
-- [ ] Todos los colores definidos en theme.py (sin hex hardcodeados)
-- [ ] Animaciones con easing (no lineales)
-- [ ] Pantallas idle con animación de respiración
-- [ ] Feedback visual en cada interacción del usuario
+## Visual and UX
+- [ ] All colors defined in theme.py (no hardcoded hex values)
+- [ ] Animations with easing (not linear)
+- [ ] Idle screens with breathing animation
+- [ ] Visual feedback on every user interaction
 
-## Mantenibilidad
-- [ ] Constantes de juego centralizadas (hit windows, scoring weights)
-- [ ] Playfield math auto-calculado (sin valores hardcodeados)
-- [ ] Código muerto eliminado
+## Maintainability
+- [ ] Game constants centralized (hit windows, scoring weights)
+- [ ] Playfield math auto-calculated (no hardcoded values)
+- [ ] Dead code removed

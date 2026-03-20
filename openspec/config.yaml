@@ -5,51 +5,51 @@ context: |
   - Python 3.12, uv (package manager)
   - Rich >=13.0, pygame >=2.5, librosa >=0.10
   - pyfiglet >=0.8, numpy >=1.24
-  - unittest (stdlib) para tests
-  - Deploy: aplicación de terminal local (no web, no server)
+  - unittest (stdlib) for tests
+  - Deploy: local terminal application (no web, no server)
 
-  ## Arquitectura
-  - Juego monolítico single-loop con separación modular
-  - main.py (raíz): punto de entrada, motor del juego (state machine, render, input, game loop 60 FPS)
-  - src/analyze.py: CLI offline para generar charts desde MP3 con librosa
-  - src/scoring.py: funciones puras de cálculo de score (sin imports, sin estado)
-  - src/scores.py: persistencia de scores en JSON
-  - src/config.py: persistencia de configuración de usuario (keybindings)
-  - src/theme.py: constantes de color y estilos (única fuente de verdad para colores)
-  - src/sfx.py: wrapper de efectos de sonido sobre pygame mixer
-  - assets/songs/: MP3 y archivos .chart.json generados
-  - assets/audio/: efectos de sonido
-  - assets/img/: imágenes
-  - docs/: documentación (README, LICENSE, CREDITS)
+  ## Architecture
+  - Monolithic single-loop game with modular separation
+  - main.py (root): entry point, game engine (state machine, render, input, game loop 60 FPS)
+  - src/analyze.py: offline CLI to generate charts from MP3 with librosa
+  - src/scoring.py: pure score calculation functions (no imports, no state)
+  - src/scores.py: score persistence in JSON
+  - src/config.py: user configuration persistence (keybindings)
+  - src/theme.py: color constants and styles (single source of truth for colors)
+  - src/sfx.py: sound effects wrapper over pygame mixer
+  - assets/songs/: MP3 and generated .chart.json files
+  - assets/audio/: sound effects
+  - assets/img/: images
+  - docs/: documentation (README, LICENSE, CREDITS)
 
-  ## Convenciones
-  - Colores SIEMPRE en src/theme.py, nunca hardcodeados
-  - Archivos de código máximo 150 líneas
-  - Funciones pequeñas y enfocadas (SOLID)
-  - Animaciones con easing (sin interpolación lineal cruda)
-  - Input platform-specific: msvcrt (Windows), curses (Unix)
-  - Dependencias gestionadas con uv (pyproject.toml + uv.lock)
+  ## Conventions
+  - Colors ALWAYS in src/theme.py, never hardcoded
+  - Code files maximum 150 lines
+  - Small and focused functions (SOLID)
+  - Animations with easing (no raw linear interpolation)
+  - Platform-specific input: msvcrt (Windows), curses (Unix)
+  - Dependencies managed with uv (pyproject.toml + uv.lock)
 
-  ## Decisiones de diseño
+  ## Design decisions
   - Hit windows: PERFECT ±35ms, GOOD ±85ms, OK ±135ms, MISS >±135ms
-  - Score cap: 1,000,000 puntos
+  - Score cap: 1,000,000 points
   - Game loop: MENU → SONG_SELECT → PLAYING → PAUSED → COUNTDOWN → RESULTS
-  - Charts generados offline en 3 dificultades: easy, hard, crazy
+  - Charts generated offline in 3 difficulties: easy, hard, crazy
 
 rules:
   proposal:
-    - "Incluir sección 'Impacto visual' si el cambio afecta la UI del terminal"
-    - "Identificar módulos afectados y sus responsabilidades"
-    - "Verificar que no se introducen dependencias nuevas sin justificación"
+    - "Include 'Visual impact' section if the change affects the terminal UI"
+    - "Identify affected modules and their responsibilities"
+    - "Verify that no new dependencies are introduced without justification"
   specs:
-    - "Usar palabras clave RFC 2119: MUST, SHOULD, MAY"
-    - "Todo requisito MUST tener al menos un escenario con #### Scenario"
-    - "Escenarios en formato Given/When/Then"
+    - "Use RFC 2119 keywords: MUST, SHOULD, MAY"
+    - "Every MUST requirement must have at least one scenario with #### Scenario"
+    - "Scenarios in Given/When/Then format"
   design:
-    - "Respetar separación de responsabilidades entre módulos existentes"
-    - "Colores nuevos MUST definirse en src/theme.py con nombre semántico"
-    - "Validar que playfield math se mantiene consistente (ver CLAUDE.md)"
+    - "Respect separation of responsibilities between existing modules"
+    - "New colors MUST be defined in src/theme.py with a semantic name"
+    - "Validate that playfield math remains consistent (see CLAUDE.md)"
   tasks:
-    - "Tareas atómicas, una responsabilidad por tarea"
-    - "Verificar que cambios no introducen archivos > 150 líneas"
-    - "Incluir tarea de test si el cambio afecta scoring o lógica de juego"
+    - "Atomic tasks, one responsibility per task"
+    - "Verify that changes do not introduce files > 150 lines"
+    - "Include a test task if the change affects scoring or game logic"
