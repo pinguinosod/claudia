@@ -1,0 +1,10 @@
+__pycache__/
+venv/
+
+# User data (generated at runtime)
+scores.json
+config.json
+*.tmp
+
+# Claude Code internals
+.claude/settings.local.json

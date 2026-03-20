@@ -1,0 +1,5 @@
+pyfiglet>=0.8.0
+rich>=13.0.0
+pygame>=2.5.0
+librosa>=0.10.0
+numpy>=1.24.0
