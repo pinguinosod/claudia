@@ -1715,11 +1715,11 @@ def run_game():
                         sfx.play("nav")
                         idle_t = 0.0
                         sel_age = 0.0
-                    elif key in ("left", "right") and songs:
+                    elif key in ("left", "right", "d") and songs:
                         avail_diffs = _available_difficulties(songs)
                         if avail_diffs:
                             cur = avail_diffs.index(difficulty) if difficulty in avail_diffs else 0
-                            step = 1 if key == "right" else -1
+                            step = 1 if key in ("right", "d") else -1
                             difficulty = avail_diffs[(cur + step) % len(avail_diffs)]
                             if difficulty not in songs[song_selected]["difficulties"]:
                                 song_selected = _next_available_song(songs, song_selected, difficulty, 1)
