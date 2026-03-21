@@ -1,0 +1,55 @@
+schema: spec-driven
+
+context: |
+  ## Stack
+  - Python 3.12, uv (package manager)
+  - Rich >=13.0, pygame >=2.5, librosa >=0.10
+  - pyfiglet >=0.8, numpy >=1.24
+  - unittest (stdlib) for tests
+  - Deploy: local terminal application (no web, no server)
+
+  ## Architecture
+  - Monolithic single-loop game with modular separation
+  - main.py (root): entry point, game engine (state machine, render, input, game loop 60 FPS)
+  - src/analyze.py: offline CLI to generate charts from MP3 with librosa
+  - src/scoring.py: pure score calculation functions (no imports, no state)
+  - src/scores.py: score persistence in JSON
+  - src/config.py: user configuration persistence (keybindings)
+  - src/theme.py: color constants and styles (single source of truth for colors)
+  - src/sfx.py: sound effects wrapper over pygame mixer
+  - assets/songs/: MP3 and generated .chart.json files
+  - assets/audio/: sound effects
+  - assets/img/: images
+  - docs/: documentation (README, LICENSE, CREDITS)
+
+  ## Conventions
+  - Colors ALWAYS in src/theme.py, never hardcoded
+  - Code files maximum 150 lines
+  - Small and focused functions (SOLID)
+  - Animations with easing (no raw linear interpolation)
+  - Platform-specific input: msvcrt (Windows), termios+tty+select (Unix)
+  - Dependencies managed with uv (pyproject.toml + uv.lock)
+
+  ## Design decisions
+  - Hit windows: PERFECT ±35ms, GOOD ±85ms, OK ±135ms, MISS >±135ms
+  - Score cap: 1,000,000 points
+  - Game loop: MENU → SONG_SELECT → PLAYING → PAUSED → COUNTDOWN → RESULTS
+  - Charts generated offline in 3 difficulties: easy, hard, crazy
+
+rules:
+  proposal:
+    - "Include 'Visual impact' section if the change affects the terminal UI"
+    - "Identify affected modules and their responsibilities"
+    - "Verify that no new dependencies are introduced without justification"
+  specs:
+    - "Use RFC 2119 keywords: MUST, SHOULD, MAY"
+    - "Every MUST requirement must have at least one scenario with #### Scenario"
+    - "Scenarios in Given/When/Then format"
+  design:
+    - "Respect separation of responsibilities between existing modules"
+    - "New colors MUST be defined in src/theme.py with a semantic name"
+    - "Validate that playfield math remains consistent (see CLAUDE.md)"
+  tasks:
+    - "Atomic tasks, one responsibility per task"
+    - "Verify that changes do not introduce files > 150 lines"
+    - "Include a test task if the change affects scoring or game logic"
