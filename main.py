@@ -14,6 +14,7 @@ from rich.layout import Layout
 from rich.live import Live
 from rich.table import Table
 from rich.text import Text
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 import theme
 import scoring
 import scores as scores_mod
@@ -76,7 +77,7 @@ def _lane_labels() -> list:
     return [f"  [{k.upper()}]  " for k in LANE_KEYS]
 
 
-_MENU_MUSIC_PATH = os.path.join(os.path.dirname(__file__), "audio", "Digital Welcome Screen.mp3")
+_MENU_MUSIC_PATH = os.path.join(os.path.dirname(__file__), "assets", "audio", "Digital Welcome Screen.mp3")
 
 _PREVIEW_DURATION_S = 30.0   # seconds of preview to play
 _PREVIEW_FADE_S     = 0.5    # fade-in AND fade-out duration
@@ -454,7 +455,7 @@ def run_intro(live: Live, items: list) -> None:
 
 def find_songs() -> list:
     """Return list of dicts with 'name', 'mp3', 'difficulties' for songs that have an MP3."""
-    songs_dir = os.path.join(os.path.dirname(__file__), "songs")
+    songs_dir = os.path.join(os.path.dirname(__file__), "assets", "songs")
     if not os.path.isdir(songs_dir):
         return []
     mp3_paths = sorted(glob_module.glob(os.path.join(songs_dir, "*.mp3")))

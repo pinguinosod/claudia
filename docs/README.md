@@ -2,16 +2,16 @@
 
 A rhythm game that runs entirely in your terminal. Notes fall, you hit them. Built with Python.
 
-> ⚠️ Early development — expect rough edges.
+> Early development — expect rough edges.
 
 ---
 
 ## Bring your own music
 
-Claudia works with any MP3 you own. Drop it in the `songs/` folder and run the analyzer to generate a chart:
+Claudia works with any MP3 you own. Drop it in the `assets/songs/` folder and run the analyzer to generate a chart:
 
 ```bash
-python analyze.py "songs/your song.mp3"
+uv run python src/analyze.py "assets/songs/your song.mp3"
 ```
 
 The game will pick it up automatically next time you launch.
@@ -25,11 +25,11 @@ A few tracks are bundled to get you started (see [CREDITS](CREDITS.md)).
 ```bash
 git clone https://github.com/pinguinosod/claudia
 cd claudia
-pip install -r requirements.txt
-python main.py
+uv sync
+uv run main.py
 ```
 
-Python 3.10+ recommended.
+Requires Python 3.12+ and [uv](https://docs.astral.sh/uv/).
 
 ---
 

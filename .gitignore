@@ -1,5 +1,7 @@
 __pycache__/
 venv/
+.venv/
+.python-version
 
 # User data (generated at runtime)
 scores.json
