@@ -4,7 +4,7 @@ import json
 import os
 import tempfile
 
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "..", "config.json")
 
 _DEFAULT: dict = {
     "lane_keys": ["d", "f", "j", "k"],
