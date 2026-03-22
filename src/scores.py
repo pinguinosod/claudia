@@ -5,7 +5,7 @@ import os
 import tempfile
 from datetime import datetime
 
-SCORES_PATH = os.path.join(os.path.dirname(__file__), "scores.json")
+SCORES_PATH = os.path.join(os.path.dirname(__file__), "..", "scores.json")
 
 _EMPTY = {
     "version": 1,

@@ -14,11 +14,13 @@ from rich.layout import Layout
 from rich.live import Live
 from rich.table import Table
 from rich.text import Text
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 import theme
 import scoring
 import scores as scores_mod
 import config as config_mod
 import sfx
+import layout as layout_mod
 
 try:
     import msvcrt
@@ -54,12 +56,21 @@ MENU_SWEEP_INTERVAL = 25.0
 _cfg = config_mod.load()
 LANE_KEYS = list(_cfg["lane_keys"])         # lane 0-3; mutated by keybind screen
 LANE_CHARS = ["◆", "◆", "◆", "◆"]
-HIT_ZONE_ROW = 22                           # separator row; rows 0..21 = approach, 22..24 = ghost
 MISS_LINGER_MS = 250                        # ms past hit time ghost note remains visible
-PLAYFIELD_ROWS = 25                         # visible note rows (22 approach + 3 ghost)
 NOTE_FALL_WINDOW_S = 2.0                    # seconds of notes visible
-_PLAYFIELD_CONTENT_HEIGHT = 29             # title+sep+22approach+perfect+3ghost+labels
-SCREEN_HEIGHT = 30                         # universal fixed height for all screens
+
+# Dynamic layout — recalculated each frame via _update_layout()
+_layout = layout_mod.calc(*os.get_terminal_size())
+HIT_ZONE_ROW = _layout.hit_zone_row
+PLAYFIELD_ROWS = _layout.playfield_rows
+
+
+def _update_layout():
+    """Recalculate layout globals from current terminal size."""
+    global _layout, HIT_ZONE_ROW, PLAYFIELD_ROWS
+    _layout = layout_mod.calc(*os.get_terminal_size())
+    HIT_ZONE_ROW = _layout.hit_zone_row
+    PLAYFIELD_ROWS = _layout.playfield_rows
 PERFECT_MS = 35
 GOOD_MS = 85
 OK_MS = 135
@@ -76,7 +87,7 @@ def _lane_labels() -> list:
     return [f"  [{k.upper()}]  " for k in LANE_KEYS]
 
 
-_MENU_MUSIC_PATH = os.path.join(os.path.dirname(__file__), "audio", "Digital Welcome Screen.mp3")
+_MENU_MUSIC_PATH = os.path.join(os.path.dirname(__file__), "assets", "audio", "Digital Welcome Screen.mp3")
 
 _PREVIEW_DURATION_S = 30.0   # seconds of preview to play
 _PREVIEW_FADE_S     = 0.5    # fade-in AND fade-out duration
@@ -454,7 +465,7 @@ def run_intro(live: Live, items: list) -> None:
 
 def find_songs() -> list:
     """Return list of dicts with 'name', 'mp3', 'difficulties' for songs that have an MP3."""
-    songs_dir = os.path.join(os.path.dirname(__file__), "songs")
+    songs_dir = os.path.join(os.path.dirname(__file__), "assets", "songs")
     if not os.path.isdir(songs_dir):
         return []
     mp3_paths = sorted(glob_module.glob(os.path.join(songs_dir, "*.mp3")))
@@ -807,7 +818,9 @@ def _note_color_at_row(row: int, lane: int) -> str:
     return _lerp_single_color(theme.GRADIENT_COLORS[0], theme.GRADIENT_COLORS[2], ease)
 
 
-_RIPPLE_DURATION = 0.3   # seconds — faster feels snappier
+# Dynamic — recalculated from layout each frame access
+def _ripple_duration():
+    return _layout.ripple_duration
 
 SIGMA_CORE  = 0.55   # tight Gaussian core — tuned for 15-row approach zone
 RING_DECAY  = 2.5    # how quickly the outer ring fades with distance
@@ -869,8 +882,8 @@ def _voltage_color(v: float, lane: int, row: int, gs: GameState, idle_t: float) 
     color  = _lerp_single_color(theme.NOTE_DARK, target, base_v)
 
     ripple_age = gs.hit_ripple[lane]
-    if ripple_age < _RIPPLE_DURATION:
-        t = ripple_age / _RIPPLE_DURATION
+    if ripple_age < _ripple_duration():
+        t = ripple_age / _ripple_duration()
         pos_t = 0.5 * t + 0.5 * (1.0 - math.cos(t * math.pi / 2))
         ripple_row = HIT_ZONE_ROW * (1.0 - pos_t)
         ripple_dist = abs(row - ripple_row)
@@ -911,8 +924,8 @@ def _side_col(r: int, gs: GameState, now: float, idle_t: float,
     max_burst = 0.0
     for lane in lanes:
         age = gs.hit_ripple[lane]
-        if age < _RIPPLE_DURATION:
-            t = age / _RIPPLE_DURATION
+        if age < _ripple_duration():
+            t = age / _ripple_duration()
             pos_t = 0.5 * t + 0.5 * (1.0 - math.cos(t * math.pi / 2))
             ripple_r = HIT_ZONE_ROW * (1.0 - pos_t)
             dist = abs(r - ripple_r)
@@ -1600,6 +1613,20 @@ def run_game():
                 now = time.time()
                 dt = now - last_frame_time
                 last_frame_time = now
+
+                # --- Terminal size check ---
+                _term_cols, _term_rows = os.get_terminal_size()
+                if not layout_mod.is_terminal_valid(_term_cols, _term_rows):
+                    if state == State.PLAYING:
+                        _paused_ms = gs.current_ms(now)
+                        state = State.PAUSED
+                    _warn = Text("Terminal too small!", style="bold red")
+                    _warn.append(f"\nMinimum: {layout_mod.MIN_COLS}×{layout_mod.MIN_ROWS}")
+                    _warn.append(f"\nCurrent: {_term_cols}×{_term_rows}")
+                    live.update(Align.center(_warn, vertical="middle"))
+                    time.sleep(POLL_INTERVAL)
+                    continue
+                _update_layout()
 
                 # --- MENU ---
                 if state == State.MENU:
