@@ -1,0 +1,15 @@
+[project]
+name = "clitar-hero"
+version = "0.1.0"
+description = "Terminal rhythm game (Guitar Hero style) with Rich TUI and pygame audio"
+requires-python = ">=3.12"
+dependencies = [
+    "pyfiglet>=0.8.0",
+    "rich>=13.0.0",
+    "pygame>=2.5.0",
+    "librosa>=0.10.0",
+    "numpy>=1.24.0",
+]
+
+[project.scripts]
+clitar-hero = "main:main"
